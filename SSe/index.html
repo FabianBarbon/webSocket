@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente WebSocket</title>
+</head>
+<body>
+    <h1>Cliente WebSocket</h1>
+    <div id="messages">
+        <!-- Los mensajes recibidos se mostrarán aquí -->
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:9999/ws');
+
+        socket.onmessage = function(event) {
+            const message = event.data;
+            console.log('Mensaje recibido del servidor:', message);
+            // Hacer lo que necesites con el mensaje recibido (actualizar la interfaz de usuario, etc.)
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p>${message}</p>`;
+        };
+    </script>
+</body>
+</html>
