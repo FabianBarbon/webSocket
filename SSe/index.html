@@ -12,8 +12,7 @@
     </div>
 
     <script>
-        const socket = new WebSocket('ws://localhost:9999/ws');
-
+        const socket = new WebSocket('ws://localhost:9999/ws');//18.189.242.242
         socket.onmessage = function(event) {
             const message = event.data;
             console.log('Mensaje recibido del servidor:', message);

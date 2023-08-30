@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
-
 	resserver "see/resSErver"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -54,16 +53,17 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func broadcastDataChanges() {
-	// Simulación de cambios en los datos cada 1 segundos
 	for {
-		// Aquí podrías implementar tu lógica para detectar cambios en los datos.
-		// Por ejemplo, consultar una base de datos o verificar el estado de tus datos.
-		x, y := resserver.Comparations()
 
+		x, y, z, k := resserver.Comparations()
+		r := resserver.ComparationsAlarmas()
 		// Crear un mapa para contener los cambios en los datos
 		dataChanges := make(map[string]interface{})
 		dataChanges["dataChange1"] = x
 		dataChanges["dataChange2"] = y
+		dataChanges["dataChange3"] = z
+		dataChanges["dataChange4"] = k
+		dataChanges["dataChange5"] = r
 
 		// Serializar el mapa como un objeto JSON
 		dataChangesJSON, err := json.Marshal(dataChanges)
@@ -84,6 +84,7 @@ func broadcastDataChanges() {
 		}
 
 		time.Sleep(5 * time.Second) // Espera 5 segundos antes de la siguiente verificación
+
 	}
 }
 
@@ -93,6 +94,6 @@ func main() {
 	// Inicia la goroutine para enviar cambios en los datos a los clientes
 	go broadcastDataChanges()
 
-	fmt.Println("Servidor WebSocket en ejecución en http://localhost:9999/ws")
+	fmt.Println("Servidor WebSocket en ejecución en http://3.131.23.215:9999/ws")
 	http.ListenAndServe(":9999", nil)
 }

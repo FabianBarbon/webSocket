@@ -7,21 +7,15 @@ import (
 
 	"time"
 
+	dbb "see/db"
+	modells "see/models"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type AlarmData struct {
-	Action string `json:"action"`
-	Title  string `json:"title"`
-	Items  []struct {
-		Title string `json:"title"`
-		Total int    `json:"total"`
-	} `json:"items"`
-}
+func proceduree() (string, string, string, string) {
 
-func proceduree() (string, string) {
-	// Cadena de conexión a la base de datos
-	db, err := sql.Open("mysql", "root:Xtam2021*@tcp(18.189.242.242:3306)/xtamtelemetria")
+	db, err := sql.Open("mysql", dbb.UrlDB) //
 	if err != nil {
 		panic(err.Error())
 	}
@@ -34,26 +28,27 @@ func proceduree() (string, string) {
 	}
 
 	// Obtener los resultados del procedimiento almacenado
-	rows, err := db.Query("SELECT @fisisccoss, @servicioss")
+	rows, err := db.Query("SELECT @fisisccoss, @servicioss, @redd, @logicoss")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer rows.Close()
 
-	var fisicosJSON, serviciosJSON string
-
+	var fisicosJSON, serviciosJSON, reddJSON, logicossJSON string
+	//
 	// Leer los resultados
 	for rows.Next() {
-		err := rows.Scan(&fisicosJSON, &serviciosJSON)
+		err := rows.Scan(&fisicosJSON, &serviciosJSON, &reddJSON, &logicossJSON)
 		if err != nil {
 			panic(err.Error())
 		}
 	}
 
 	// Crear estructuras para almacenar los resultados del procedimiento almacenado
-	var fisicosData, serviciosData AlarmData
+	var fisicosData, serviciosData, reddData, logicossData modells.AlarmData
 
 	// Decodificar los resultados JSON
+
 	err = json.Unmarshal([]byte(fisicosJSON), &fisicosData)
 	if err != nil {
 		panic(err.Error())
@@ -64,7 +59,18 @@ func proceduree() (string, string) {
 		panic(err.Error())
 	}
 
+	err = json.Unmarshal([]byte(reddJSON), &reddData)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = json.Unmarshal([]byte(logicossJSON), &logicossData)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	// Imprimir los resultados como JSON
+
 	fisicosJSONResult, err := json.MarshalIndent(fisicosData, "", "  ")
 	if err != nil {
 		panic(err.Error())
@@ -75,17 +81,27 @@ func proceduree() (string, string) {
 		panic(err.Error())
 	}
 
+	reddJSONResult, err := json.MarshalIndent(reddData, "", "  ")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	logicosJSONResult, err := json.MarshalIndent(logicossData, "", "  ")
+	if err != nil {
+		panic(err.Error())
+	}
+
 	//fmt.Println("Resultados Físicos:")
 	//fmt.Println(string(fisicosJSONResult))
 
 	//fmt.Println("\nResultados Servicios:")
 	//fmt.Println(string(serviciosJSONResult))
-	return string(fisicosJSONResult), string(serviciosJSONResult)
+	return string(fisicosJSONResult), string(serviciosJSONResult), string(reddJSONResult), string(logicosJSONResult)
 }
 
-func Comparations() (string, string) {
+func Comparations() (string, string, string, string) {
 	// Realizar la primera llamada al procedimiento almacenado
-	prevFisicosJSON, prevServiciosJSON := proceduree()
+	prevFisicosJSON, prevServiciosJSON, prevreddJSON, prevlogicosJSON := proceduree()
 
 	// Definir la frecuencia de la comparación en segundos
 	frequency := 5
@@ -96,22 +112,35 @@ func Comparations() (string, string) {
 		time.Sleep(time.Duration(frequency) * time.Second)
 
 		// Realizar la llamada al procedimiento almacenado y obtener los resultados actuales
-		currentFisicosJSON, currentServiciosJSON := proceduree()
+		currentFisicosJSON, currentServiciosJSON, currentreddJSON, currentlogicosJSON := proceduree()
 
 		// Comparar los resultados actuales con los anteriores
 		if currentFisicosJSON != prevFisicosJSON {
 			fmt.Println("Hubo cambios en la sección 'Físicos':")
-			fmt.Println(currentFisicosJSON)
+			//fmt.Println(currentFisicosJSON)
 			prevFisicosJSON = currentFisicosJSON
 		}
 
 		if currentServiciosJSON != prevServiciosJSON {
-			fmt.Println("Hubo cambios en la sección 'Servicios':")
-			fmt.Println(currentServiciosJSON)
+			fmt.Println("Hubo cambios en la sección 'Físicos':")
+			//fmt.Println(currentFisicosJSON)
 			prevServiciosJSON = currentServiciosJSON
 		}
+
+		if currentreddJSON != prevreddJSON {
+			fmt.Println("Hubo cambios en la sección 'Red':")
+			//fmt.Println(currentServiciosJSON)
+			prevreddJSON = currentreddJSON
+		}
+
+		if currentlogicosJSON != prevlogicosJSON {
+			fmt.Println("Hubo cambios en la sección 'Servicios':")
+			//fmt.Println(currentServiciosJSON)
+			prevlogicosJSON = currentlogicosJSON
+		}
+
 		// Devolver los valores de prevFisicosJSON y prevServiciosJSON cuando el bucle se detenga
-		return prevFisicosJSON, prevServiciosJSON
+		return prevFisicosJSON, prevServiciosJSON, prevreddJSON, prevlogicosJSON
 	}
 
 }
